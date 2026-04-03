@@ -10,11 +10,12 @@ FastAPI backend serving all AI workstreams:
 - Generative AI document creation
 - GDPR audit trail
 """
+from backend.routers import agents
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from db.database import init_db
 from db.seed import seed_transactions
-from routers import transactions, agents
+from routers import transactions
 
 app = FastAPI(
     title="AccountIQ API",

@@ -8,6 +8,6 @@ scipy
 pandas
 numpy
 httpx
-ollama
 python-dotenv
 networkx
+packaging

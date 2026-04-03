@@ -1,73 +1,18 @@
-"""Agents router — Junior Assist, Reviewer Assist, Generative AI, Orchestrator."""
+"""Agents router — Junior Assist, Reviewer Assist, Generative AI."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from db.database import get_db, Transaction, GeneratedDocument, AuditLog
-from backend.services.agent_service import (
+from backend.services.agent_service_with_ollama import (
     junior_assist_categorise,
     reviewer_assist_analyse,
     generate_client_letter,
     generate_anomaly_report,
 )
-from services.orchestrator import orchestrator
 import json
 
 router = APIRouter(prefix="/agents", tags=["agents"])
-
-
-class OrchestratorRequest(BaseModel):
-    client_name: Optional[str] = None
-
-
-@router.post("/orchestrate")
-async def run_orchestrator(
-    request: OrchestratorRequest,
-    db: Session = Depends(get_db)
-):
-    """
-    Orchestrator Agent — the brain of AccountIQ.
-    Give it a goal and it autonomously decides which agents to run and when.
-    This is true Agentic AI — no manual triggering of individual agents needed.
-    """
-    # Fetch all transactions and pass to orchestrator
-    transactions = db.query(Transaction).limit(20).all()
-    tx_list = [
-        {
-            "id": t.id,
-            "vendor": t.vendor,
-            "amount": t.amount,
-            "category": t.category,
-            "risk_label": t.risk_label,
-            "risk_score": t.risk_score,
-            "is_anomaly": t.is_anomaly,
-            "explanation": t.explanation,
-            "description": t.description,
-        }
-        for t in transactions
-    ]
-
-    # Hand over to orchestrator — it takes it from here autonomously
-    result = await orchestrator.run(
-        transactions=tx_list,
-        client_name=request.client_name,
-    )
-
-    # Log the orchestrator run in GDPR audit log
-    log = AuditLog(
-        action="orchestrator_run",
-        input_data=json.dumps({
-            "transaction_count": len(tx_list),
-            "client_name": request.client_name,
-        }),
-        output_data=json.dumps({"summary": result.get("summary")}),
-        model_used="OrchestratorV1+Ollama/qwen3.5:9b",
-        justification=result.get("summary", ""),
-    )
-    db.add(log)
-    db.commit()
-
-    return result
 
 
 @router.post("/junior-assist/{transaction_id}")
@@ -103,7 +48,9 @@ async def run_junior_assist(transaction_id: int, db: Session = Depends(get_db)):
 
 @router.post("/reviewer-assist")
 async def run_reviewer_assist(
-    limit: int = 50,
+    # limit: int = 50,
+    limit: int = 10,
+
     risk_filter: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
@@ -125,7 +72,7 @@ async def run_reviewer_assist(
 
     result = await reviewer_assist_analyse(tx_list)
 
-    log = AuditLog(
+    log = AuditLog( 
         action="reviewer_assist_batch",
         input_data=json.dumps({"transaction_count": len(tx_list)}),
         output_data=json.dumps(result),
