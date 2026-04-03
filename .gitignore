@@ -16,7 +16,7 @@ venv/
 *.sqlite
 
 # Mac
-.DS_Store
+*.DS_Store
 .AppleDouble
 
 # AWS
