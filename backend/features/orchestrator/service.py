@@ -2,6 +2,7 @@ import time
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from typing import List
+from core.email import send_high_risk_alert, send_report_ready
 from features.transactions import repository as tx_repo
 from features.transactions import service as tx_service
 from features.agents import service as agent_service
@@ -191,6 +192,20 @@ async def run(db: Session, client_name: str) -> OrchestratorResponse:
             report=report,
         )
         log("ACT", f"Anomaly report generated for {len(anomalies)} flagged transactions")
+        
+        # Send ONE high risk alert email
+        if high_risk:
+            high_risk_dicts = [t.__dict__ for t in high_risk]
+            email_sent = send_high_risk_alert(
+                high_risk_transactions=high_risk_dicts,
+                anomaly_count=len(anomalies),
+                report_content=report,
+                client_name=client_name,
+            )
+            if email_sent:
+                log("ACT", f"High risk alert email sent for {len(high_risk)} transactions")
+                audit_repo.log(db, action="email_alert_sent",
+                            details=f"High risk alert sent: {len(high_risk)} transactions")
 
     # 5. Generate Letter
     if any(p.agent == "Generate Letter" for p in plan_executed):

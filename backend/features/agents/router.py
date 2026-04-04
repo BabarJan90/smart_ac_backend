@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from core.database import get_db
+from core.email import send_high_risk_alert, send_report_ready
 from features.transactions import repository as tx_repo
 from features.agents import service as agent_service
 from features.agents.schemas import (
@@ -123,6 +124,14 @@ async def generate_anomaly_report(db: Session = Depends(get_db)):
                     content=report, doc_type="anomaly_report")
     audit_repo.log(db, action="generate_anomaly_report",
                    details=f"Report generated for {len(anomalies)} anomalies")
+    
+    # Send high risk alert email with report
+    if anomalies:
+        send_high_risk_alert(
+            high_risk_transactions=anomaly_dicts,
+            anomaly_count=len(anomalies),
+            report_content=report,
+        )
 
     return AnomalyReportResponse(
         status="success",
