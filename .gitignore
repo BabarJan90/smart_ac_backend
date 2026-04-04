@@ -1,3 +1,4 @@
+# Security
 *.pem
 .env
 *.env
@@ -16,9 +17,14 @@ venv/
 *.sqlite
 
 # Mac
-*.DS_Store
+.DS_Store
 .AppleDouble
 
 # AWS
 *.csv
-EOF
+
+# Flutter generated
+*.g.dart
+*.freezed.dart
+injector.config.dart
+build/
