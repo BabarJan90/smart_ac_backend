@@ -11,11 +11,11 @@
 
 ## Live Demo
 
-| Service | URL |
+| Service | Link |
 |---|---|
-| Flutter Web App | http://smartac-frontend-1775237755.s3-website.eu-west-2.amazonaws.com |
+| Web App | http://smartac-frontend-1775237755.s3-website.eu-west-2.amazonaws.com |
 | Android | https://appdistribution.firebase.dev/i/6c2309e7959899a4 |
-| iOS | iOS Link Coming Soon |
+| iOS | https://testflight.apple.com/join/nZdeEwDT |
 
 ---
 
