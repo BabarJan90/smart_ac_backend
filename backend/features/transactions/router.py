@@ -4,6 +4,9 @@ from typing import List, Optional
 from core.database import get_db
 from features.transactions import repository, service
 from features.transactions.schemas import TransactionCreate, TransactionResponse, AccountStats
+from features.documents.models import GeneratedDocument
+from features.audit.models import AuditLog
+from features.transactions.models import Transaction
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
@@ -62,3 +65,24 @@ def analyse_all(db: Session = Depends(get_db)):
         )
         updated += 1
     return {"message": f"Analysed {updated} transactions", "updated": updated}
+
+@router.post("/reset", tags=["Demo"])
+def reset_database(db: Session = Depends(get_db)):
+    """
+    Demo only - deletes all transactions and re-seeds fresh data.
+    """
+    from db.seed import seed
+    
+    # Delete all existing data
+    db.query(AuditLog).delete()
+    db.query(GeneratedDocument).delete()
+    db.query(Transaction).delete()
+    db.commit()
+    
+    # Re-seed fresh 50 transactions
+    seed(db)
+    
+    return {
+        "message": "Database reset successfully",
+        "status": "success",
+    }

@@ -1,6 +1,6 @@
 """
 SmartAC — AI-Powered Accounting Platform
-KTP Demo: University of Essex × Active Software Platform UK Ltd
+Research: University of Essex
 
 Entry point — registers all feature routers and starts the app.
 """
@@ -65,7 +65,7 @@ def root():
         "project": "SmartAC",
         "description": APP_DESCRIPTION,
         "university": "University of Essex",
-        "company": "Active Software Platform UK Ltd",
+        "company": "Essex UK Ltd",
         "endpoints": {
             "transactions":      "/transactions",
             "stats":             "/transactions/stats",
