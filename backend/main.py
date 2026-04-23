@@ -78,5 +78,6 @@ def root():
             "documents":         "/agents/documents",
             "audit_log":         "/agents/audit-log",
             "docs":              "/docs",
+            "orchestrate_langchain": "/agents/orchestrate-langchain",
         }
     }
