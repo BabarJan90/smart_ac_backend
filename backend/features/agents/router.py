@@ -16,6 +16,7 @@ from core.claude import claude_generate
 from typing import List, Optional
 
 from pydantic import BaseModel
+from features.agents import product_service
 
 class SpeechRecommendationRequest(BaseModel):
     text: str
@@ -26,6 +27,24 @@ class SpeechRecommendationResponse(BaseModel):
     recommendation: str
     services: List[str]
     next_steps: List[str]
+
+class ProductItem(BaseModel):
+    id: int
+    title: str
+    price: float
+    category: str
+    image: str
+    reason: str
+    rating: float = 0.0
+
+class ProductRecommendationRequest(BaseModel):
+    conversation: str
+
+class ProductRecommendationResponse(BaseModel):
+    source: str
+    products: List[ProductItem]
+    conversation_summary: str
+    duration_seconds: float
 
 router = APIRouter(prefix="/agents", tags=["Agents"])
 
@@ -211,60 +230,30 @@ async def speech_recommendation(
     return SpeechRecommendationResponse(**result)
 
 
-@router.post("/speech-recommendation",
-             response_model=SpeechRecommendationResponse)
-async def speech_recommendation(
-    request: SpeechRecommendationRequest,
+@router.post("/product-recommendations",
+             response_model=ProductRecommendationResponse)
+def product_recommendations(
+    request: ProductRecommendationRequest,
     db: Session = Depends(get_db),
 ):
-    """Takes transcribed speech and returns SmartAC service recommendations."""
-
-    stats = tx_repo.get_stats(db)
-
-    system = """
-    You are a SmartAC sales and advisory AI assistant for a UK accounting firm.
-    SmartAC offers these services:
-    1. Transaction Risk Analysis - fuzzy logic risk scoring
-    2. AI Categorisation - automatic transaction categorisation
-    3. Anomaly Detection - identify suspicious transactions
-    4. Client Letters - AI generated professional letters
-    5. Audit Trail - GDPR compliant decision logging
-    6. Orchestrator - fully autonomous accounting AI agent
-
-    Based on what the customer says, recommend the most relevant services.
-    Return ONLY a JSON object with keys:
-    - recommendation (string: 2-3 sentences)
-    - services (list of relevant service names)
-    - next_steps (list of 2-3 action items)
-    No other text.
     """
-
-    prompt = (
-        f"Customer said: '{request.text}'\n"
-        f"Their account has {stats.total_transactions} transactions, "
-        f"{stats.risk_distribution.high} high risk items, "
-        f"{stats.anomaly_count} anomalies.\n"
-        f"What SmartAC services would you recommend?"
+    Agentic product recommendations based on conversation context.
+    Claude autonomously decides which products to recommend.
+    Results are cached for 30 minutes.
+    """
+    result = product_service.get_product_recommendations(
+        conversation=request.conversation,
     )
 
-    import json
-    raw = await claude_generate(prompt, system)
+    audit_repo.log(
+        db,
+        action="product_recommendations",
+        details=f"Source: {result['source']}, Products: {len(result['products'])}, Steps: {result.get('agent_steps', [])}",
+    )
 
-    try:
-        clean = raw.strip()
-        if "```" in clean:
-            clean = clean.split("```")[1]
-            if clean.startswith("json"):
-                clean = clean[4:]
-        result = json.loads(clean)
-    except Exception:
-        result = {
-            "recommendation": "Based on your account activity, SmartAC can help you manage risk and automate your accounting processes.",
-            "services": ["Transaction Risk Analysis", "Anomaly Detection"],
-            "next_steps": ["Run the Orchestrator", "Review high risk transactions"],
-        }
-
-    audit_repo.log(db, action="speech_recommendation",
-                   details=f"Query: {request.text[:100]}")
-
-    return SpeechRecommendationResponse(**result)
+    return ProductRecommendationResponse(
+        source=result["source"],
+        products=[ProductItem(**p) for p in result["products"]],
+        conversation_summary=result["conversation_summary"],
+        duration_seconds=result["duration_seconds"],
+    )

@@ -11,6 +11,7 @@ load_dotenv()
 ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL: str = "claude-haiku-4-5-20251001"
 ANTHROPIC_MAX_TOKENS: int = 1024
+ANTHROPIC_MAX_TOKENS_AGENT: int = 4096
 
 # ── Database ───────────────────────────────────────────────────────────────
 DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./accountiq.db")
@@ -24,3 +25,7 @@ APP_VERSION: str = "1.0.0"
 GMAIL_ADDRESS: str      = os.getenv("GMAIL_ADDRESS", "")
 GMAIL_APP_PASSWORD: str = os.getenv("GMAIL_APP_PASSWORD", "")
 ALERT_EMAIL: str        = os.getenv("ALERT_EMAIL", "")
+
+# ── Product API ────────────────────────────────────────────────────────────
+PRODUCT_API_URL: str = "https://dummyjson.com/products?limit=100"
+CACHE_TTL_SECONDS = 1800  # 30 minutes
