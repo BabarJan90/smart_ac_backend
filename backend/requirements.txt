@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 sqlalchemy
-pydantic
+pydantic[email]
 python-multipart
 scikit-fuzzy
 scipy
@@ -13,3 +13,6 @@ packaging
 langchain
 langchain-anthropic
 langgraph
+python-jose[cryptography]
+passlib[bcrypt]
+google-auth

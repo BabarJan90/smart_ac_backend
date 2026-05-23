@@ -23,6 +23,8 @@ from features.documents.router import router as documents_router
 from features.audit.router import router as audit_router
 
 from db.seed import seed
+from features.auth.models import User as UserModel  # noqa: F401
+from features.auth.router import router as auth_router
 
 # ── App ────────────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -45,6 +47,7 @@ app.include_router(agents_router)
 app.include_router(orchestrator_router)
 app.include_router(documents_router)
 app.include_router(audit_router)
+app.include_router(auth_router)
 
 
 # ── Startup ────────────────────────────────────────────────────────────────
